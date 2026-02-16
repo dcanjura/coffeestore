@@ -2,9 +2,13 @@ package com.exercise.coffeestore.service;
 
 import com.exercise.coffeestore.dto.CoffeeDTO;
 import com.exercise.coffeestore.exception.CoffeeNotFoundException;
+import com.exercise.coffeestore.model.AuditEvent;
+import com.exercise.coffeestore.model.Coffee;
+import com.exercise.coffeestore.repository.AuditRepository;
 import com.exercise.coffeestore.repository.CoffeeRepository;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -12,9 +16,11 @@ import java.util.stream.Collectors;
 @Service
 public class CoffeeService {
     private final CoffeeRepository repository;
+    private final AuditRepository auditRepository;
 
-    public CoffeeService(CoffeeRepository repository) {
-        this.repository = repository;
+    public CoffeeService() {
+        this.repository = new CoffeeRepository();
+        this.auditRepository = new AuditRepository();
     }
 
     /**
@@ -24,7 +30,7 @@ public class CoffeeService {
     public List<CoffeeDTO> getAllCoffees(){
         return repository.getAllCoffees()
                 .stream()
-                .map(u -> new CoffeeDTO(u.getId(), u.getName(), u.getDescription(), u.isEnabled()))
+                .map(u -> new CoffeeDTO(u.getId(), u.getName(), u.getDescription(), u.isEnabled(), u.getPrice()))
                 .collect(Collectors.toList());
     }
 
@@ -35,7 +41,7 @@ public class CoffeeService {
      */
     public Optional<CoffeeDTO> getCoffeeByValue(String value){
         return Optional.of(repository.getCoffeeByValue(value)
-                .map(u -> new CoffeeDTO(u.getId(), u.getName(), u.getDescription(), u.isEnabled()))
+                .map(u -> new CoffeeDTO(u.getId(), u.getName(), u.getDescription(), u.isEnabled(), u.getPrice()))
                 .orElseThrow(() -> new CoffeeNotFoundException("Coffee not found with name or description: " + value)));
     }
 
@@ -44,10 +50,20 @@ public class CoffeeService {
      * @param name
      * @param description
      * @param enabled
+     * @param price
      * @return
      */
-    public Optional<CoffeeDTO> createCoffee(String name, String description, Boolean enabled) {
-        return repository.createCoffee(new com.exercise.coffeestore.model.Coffee(null, name, description, enabled))
-                .map(u -> new CoffeeDTO(u.getId(), u.getName(), u.getDescription(), u.isEnabled()));
+    public Optional<CoffeeDTO> createCoffee(String name, String description, Boolean enabled, Double price) {
+        return repository.createCoffee(new Coffee(null, name, description, enabled, price))
+                .map(u -> {
+                    auditRepository.save(new AuditEvent(
+                            null,
+                            "Added new coffee with name: " + name,
+                            LocalDateTime.now(),
+                            "Price set: " + price
+                    ));
+
+                    return new CoffeeDTO(u.getId(), u.getName(), u.getDescription(), u.isEnabled(), u.getPrice());
+                });
     }
 }

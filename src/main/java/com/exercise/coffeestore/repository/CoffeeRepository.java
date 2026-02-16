@@ -21,7 +21,7 @@ public class CoffeeRepository {
     }
 
     public Optional<Coffee> createCoffee(Coffee coffee) {
-        Coffee newCoffee = new Coffee(idCounter++, coffee.getName(), coffee.getDescription(), coffee.isEnabled());
+        Coffee newCoffee = new Coffee(idCounter++, coffee.getName(), coffee.getDescription(), coffee.isEnabled(), coffee.getPrice());
         coffeeMap.put(newCoffee.getId(), newCoffee);
         return Optional.of(newCoffee);
     }

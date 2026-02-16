@@ -11,8 +11,8 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/v1/coffees")
 public class CoffeeController {
-    private final CoffeeService service;
 
+    private final CoffeeService service;
     public CoffeeController(CoffeeService service) {
         this.service = service;
     }
@@ -29,6 +29,6 @@ public class CoffeeController {
 
     @PostMapping // Add a new coffee to the store. The request should include the name, description, and enabled status of the coffee.
     public ResponseEntity<Optional<CoffeeDTO>> createCoffee(@RequestBody CoffeeDTO coffeeDTO) {
-        return ResponseEntity.ok(service.createCoffee(coffeeDTO.name(), coffeeDTO.description(), coffeeDTO.enabled()));
+        return ResponseEntity.ok(service.createCoffee(coffeeDTO.name(), coffeeDTO.description(), coffeeDTO.enabled(), coffeeDTO.price()));
     }
 }

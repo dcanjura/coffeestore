@@ -9,11 +9,13 @@ public class Coffee {
     private String name;
     private String description;
     private boolean enabled;
+    private Double price;
 
-    public Coffee(Long id, String name, String description, boolean enabled) {
+    public Coffee(Long id, String name, String description, boolean enabled, Double price) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.enabled = enabled;
+        this.price = price;
     }
 }
