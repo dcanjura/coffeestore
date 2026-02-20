@@ -1,4 +1,4 @@
-# ☕ CoffeeStore API
+# CoffeeStore API
 
 REST API for managing coffee orders, built with Spring Boot 3.
 
