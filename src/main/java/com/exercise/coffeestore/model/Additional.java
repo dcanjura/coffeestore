@@ -1,21 +1,24 @@
 package com.exercise.coffeestore.model;
 
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+@Entity
+@Table(name = "additional")
 @Getter @Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class Additional {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String description;
     private Double cost;
     private Double combineCost;
-
-    public Additional(Long id, String description, Double cost, Double combineCost) {
-        this.id = id;
-        this.description = description;
-        this.cost = cost;
-        this.combineCost = combineCost;
-    }
 
     public Double calculateCharge() {
         return switch (description){
