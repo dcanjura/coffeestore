@@ -1,69 +1,58 @@
 package com.exercise.coffeestore.service;
 
+import com.exercise.coffeestore.dto.AuditEventDTO;
 import com.exercise.coffeestore.dto.CoffeeDTO;
 import com.exercise.coffeestore.exception.CoffeeNotFoundException;
-import com.exercise.coffeestore.model.AuditEvent;
-import com.exercise.coffeestore.model.Coffee;
+import com.exercise.coffeestore.model.CoffeeEntity;
 import com.exercise.coffeestore.repository.AuditRepository;
 import com.exercise.coffeestore.repository.CoffeeRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
-public class CoffeeService {
+public class CoffeeService{
     private final CoffeeRepository repository;
     private final AuditRepository auditRepository;
 
-    public CoffeeService() {
-        this.repository = new CoffeeRepository();
-        this.auditRepository = new AuditRepository();
+    public CoffeeService(CoffeeRepository repository, AuditRepository auditRepository) {
+        this.repository = repository;
+        this.auditRepository = auditRepository;
     }
 
     /**
      * Retrieve a list of all coffees available in the store. Each coffee should include its id, name, description, and enabled status.
-     * @return
+     * @return page of coffees
      */
-    public List<CoffeeDTO> getAllCoffees(){
-        return repository.getAllCoffees()
-                .stream()
-                .map(u -> new CoffeeDTO(u.getId(), u.getName(), u.getDescription(), u.isEnabled(), u.getPrice()))
-                .collect(Collectors.toList());
+    public Page<CoffeeDTO> getAllCoffees(Pageable pageable){
+        return repository.findAll(pageable)
+                .map(CoffeeDTO::toDTO);
     }
 
     /**
      * Search for a coffee by name or description. The search is case-insensitive and matches either the name or description.
-     * @param value
-     * @return
+     * @param name name of a coffee
+     * @param description description of a coffee
+     * @return empty value or a coffee
      */
-    public Optional<CoffeeDTO> getCoffeeByValue(String value){
-        return Optional.of(repository.getCoffeeByValue(value)
+    public Optional<CoffeeDTO> getCoffeeByValue(String name, String description){
+        return Optional.of(repository.findByNameOrDescription(name, description )
                 .map(u -> new CoffeeDTO(u.getId(), u.getName(), u.getDescription(), u.isEnabled(), u.getPrice()))
-                .orElseThrow(() -> new CoffeeNotFoundException("Coffee not found with name or description: " + value)));
+                .orElseThrow(() -> new CoffeeNotFoundException("Coffee not found with name or description")));
     }
 
     /**
      * Add a new coffee to the store. The request should include the name, description, and enabled status of the coffee.
-     * @param name
-     * @param description
-     * @param enabled
-     * @param price
-     * @return
+     * @param coffeeDTO value
+     * @return optional of coffeeDTO
      */
-    public Optional<CoffeeDTO> createCoffee(String name, String description, Boolean enabled, Double price) {
-        return repository.createCoffee(new Coffee(null, name, description, enabled, price))
-                .map(u -> {
-                    auditRepository.save(new AuditEvent(
-                            null,
-                            "Added new coffee with name: " + name,
-                            LocalDateTime.now(),
-                            "Price set: " + price
-                    ));
-
-                    return new CoffeeDTO(u.getId(), u.getName(), u.getDescription(), u.isEnabled(), u.getPrice());
-                });
+    public CoffeeDTO createCoffee(CoffeeDTO coffeeDTO) {
+        CoffeeEntity coffeeEntity = repository.save(CoffeeDTO.toCoffee(coffeeDTO));
+        AuditEventDTO auditEventDTO = new AuditEventDTO(null, "CREATE", LocalDateTime.now(), "New coffee created with price " + coffeeEntity.getPrice());
+        auditRepository.save(AuditEventDTO.toDomain(auditEventDTO));
+        return CoffeeDTO.toDTO(coffeeEntity);
     }
 }

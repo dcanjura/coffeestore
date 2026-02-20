@@ -1,21 +1,17 @@
 package com.exercise.coffeestore.service;
 
+import com.exercise.coffeestore.dto.AuditEventDTO;
 import com.exercise.coffeestore.dto.OrderDTO;
 import com.exercise.coffeestore.dto.OrderItemDTO;
 import com.exercise.coffeestore.helper.OrderHelper;
-import com.exercise.coffeestore.model.Additional;
-import com.exercise.coffeestore.model.AuditEvent;
-import com.exercise.coffeestore.model.Coffee;
-import com.exercise.coffeestore.model.Order;
+import com.exercise.coffeestore.model.OrderEntity;
 import com.exercise.coffeestore.repository.AuditRepository;
 import com.exercise.coffeestore.repository.OrderRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class OrderService {
@@ -33,34 +29,21 @@ public class OrderService {
      * Retrieve a list of all orders.
      * @return
      */
-    public List<OrderDTO> getAllOrders() {
-        return repository.getAllOrders()
-                .stream()
-                .map(u -> new OrderDTO(u.getId(), u.getDescription(), helper.toOrderItemDTO(u.getCoffees()), u.getTotalItems(), u.getTotal(), u.getDate()))
-                .collect(Collectors.toList());
+    public Page<OrderDTO> getAllOrders(Pageable pageable) {
+        return repository.findAll(pageable)
+                .map(u -> new OrderDTO(u.getId(), u.getDescription(), OrderItemDTO.toDTO(u.getOrderItem()), u.getTotalItems(), u.getTotal(), u.getDate()));
+
     }
 
     /**
      * Creates a new order. This request should include Description, Coffees, Additional, Items
-     * @param description
-     * @param orderItemDTO
-     * @param totalItems
-     * @return
+     * @param orderDTO value
+     * @return saved orderDTO
      */
-    public Optional<OrderDTO> createOrder(String description, List<OrderItemDTO> orderItemDTO, Integer totalItems) {
-        List<Map<Coffee, List<Additional>>> coffees = helper.toDomain(orderItemDTO);
-        Double total = helper.calculateTotal(coffees);
-
-        return repository.createOrder(new Order(null, description, coffees, totalItems, total, LocalDateTime.now()))
-                .map(u -> {
-                    auditRepository.save(new AuditEvent(
-                            null,
-                            "New order added: " + description,
-                            LocalDateTime.now(),
-                            "Total: " + total
-                    ));
-
-                    return new OrderDTO(u.getId(), u.getDescription(), helper.toOrderItemDTO(coffees), totalItems, total, LocalDateTime.now());
-                });
+    public OrderDTO createOrder(OrderDTO orderDTO) {
+        OrderEntity orderEntity = repository.save(OrderDTO.toOrder(orderDTO));
+        AuditEventDTO auditEventDTO = new AuditEventDTO(null, "CREATE", LocalDateTime.now(), "New order placed");
+        auditRepository.save(AuditEventDTO.toDomain(auditEventDTO));
+        return OrderDTO.toDTO(orderEntity);
     }
 }

@@ -2,6 +2,8 @@ package com.exercise.coffeestore.service;
 
 import com.exercise.coffeestore.dto.AuditEventDTO;
 import com.exercise.coffeestore.repository.AuditRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,10 +22,8 @@ public class AuditService {
      * Retrieve all audit events registered by the app
      * @return
      */
-    public List<AuditEventDTO> getAuditEvents() {
-        return repository.getAuditEvents()
-                .stream()
-                .map(u -> new AuditEventDTO(u.getId(), u.getAction(), u.getDate(), u.getDescription()))
-                .collect(Collectors.toUnmodifiableList());
+    public Page<AuditEventDTO> getAuditEvents(Pageable pageable) {
+        return repository.findAll(pageable)
+                .map(AuditEventDTO::toDTO);
     }
 }
