@@ -1,28 +1,12 @@
 package com.exercise.coffeestore.repository;
 
-import com.exercise.coffeestore.model.Coffee;
+import com.exercise.coffeestore.model.CoffeeEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.*;
+import java.util.Optional;
 
 @Repository
-public class CoffeeRepository {
-    private final Map<Long, Coffee> coffeeMap = new HashMap<>();
-    private Long idCounter = 1L;
-
-    public List<Coffee> getAllCoffees(){
-        return new ArrayList<>(coffeeMap.values());
-    };
-
-    public Optional<Coffee> getCoffeeByValue(String value) {
-        return coffeeMap.values().stream()
-                .filter(coffee -> coffee.getName().equalsIgnoreCase(value) || coffee.getDescription().equalsIgnoreCase(value))
-                .findFirst();
-    }
-
-    public Optional<Coffee> createCoffee(Coffee coffee) {
-        Coffee newCoffee = new Coffee(idCounter++, coffee.getName(), coffee.getDescription(), coffee.isEnabled(), coffee.getPrice());
-        coffeeMap.put(newCoffee.getId(), newCoffee);
-        return Optional.of(newCoffee);
-    }
+public interface CoffeeRepository extends JpaRepository<CoffeeEntity, Long> {
+    public Optional<CoffeeEntity> findByNameOrDescription(String name, String description);
 }
