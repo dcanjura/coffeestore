@@ -2,6 +2,9 @@ package com.exercise.coffeestore.controller;
 
 import com.exercise.coffeestore.dto.OrderDTO;
 import com.exercise.coffeestore.service.OrderService;
+import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,12 +20,12 @@ public class OrderController {
     public OrderController(OrderService service) { this.service = service; }
 
     @GetMapping // Retrieve a list of all orders.
-    public ResponseEntity<List<OrderDTO>> getAllOrders(){
-        return ResponseEntity.ok().body(service.getAllOrders());
+    public ResponseEntity<Page<OrderDTO>> getAllOrders(Pageable pageable) {
+        return ResponseEntity.ok().body(service.getAllOrders(pageable));
     }
 
     @PostMapping // Creates a new order. This request should include Description, Coffees, Additional, Items
-    public ResponseEntity<Optional<OrderDTO>> createOrder(@RequestBody OrderDTO orderDTO) {
-        return ResponseEntity.ok(service.createOrder(orderDTO.description(), orderDTO.orderItemDTO(), orderDTO.totalItems()));
+    public ResponseEntity<OrderDTO> createOrder(@Valid @RequestBody OrderDTO orderDTO) {
+        return ResponseEntity.ok(service.createOrder(orderDTO));
     }
 }
