@@ -25,7 +25,8 @@ public class CoffeeService{
 
     /**
      * Retrieve a list of all coffees available in the store. Each coffee should include its id, name, description, and enabled status.
-     * @return page of coffees
+     * @param pageable indicates how many items on a single page, avoiding loadness of all records at same time
+     * @return
      */
     public Page<CoffeeDTO> getAllCoffees(Pageable pageable){
         return repository.findAll(pageable)
